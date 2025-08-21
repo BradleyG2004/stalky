@@ -1,0 +1,18 @@
+/* color palette from <https://github.com/vuejs/theme> */
+@import "tailwindcss";
+@plugin "daisyui";
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+*{
+  cursor: url('@/assets/image6.png'), auto !important;
+}
+.form-container{
+  height: 60px;
+}
