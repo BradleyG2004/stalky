@@ -264,13 +264,64 @@ async function searchKnowledgeGraph(searchText) {
   }
 }
 
+// Fonction pour envoyer les données vers Zapier via le backend
+async function sendToZapier(instagramData, aboutData) {
+  try {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+    
+    const payload = {
+      instagram: instagramData,
+      about: aboutData
+    };
+
+    console.log("Envoi vers le backend:", payload);
+    console.log("URL du backend:", backendUrl);
+
+    const response = await fetch(`${backendUrl}/send-to-zapier`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log("Réponse du backend:", response.status, response.statusText);
+    
+    if (response.ok) {
+      const responseData = await response.json();
+      console.log("Données envoyées avec succès vers Zapier via le backend:", responseData);
+    } else {
+      const errorData = await response.json();
+      console.error("Erreur lors de l'envoi via le backend:", response.status, errorData);
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'envoi via le backend:", error);
+  }
+}
+
 // Gestionnaire pour le formulaire
-function handleFormSubmit() {
+async function handleFormSubmit() {
   const value = query.value.trim();
   if (value) {
-    // Lancer les deux recherches en parallèle
-    searchWithGoogleApi(value);
-    searchKnowledgeGraph(value);
+    try {
+      // Lancer les deux recherches en parallèle et attendre qu'elles soient terminées
+      await Promise.all([
+        searchWithGoogleApi(value),
+        searchKnowledgeGraph(value)
+      ]);
+      
+      // Envoyer les données vers Zapier une fois les recherches terminées
+      const instagramData = results.value.length > 0 ? results.value[0].link : null;
+      
+      const aboutData = aboutResults.value || null;
+      
+      console.log("Données à envoyer vers Zapier:", { instagramData, aboutData });
+      await sendToZapier(instagramData, aboutData);
+      
+    } catch (error) {
+      console.error("Erreur lors de la recherche:", error);
+    }
   }
 }
 
